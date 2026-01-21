@@ -57,34 +57,61 @@ void handle_input(bool *running, const Uint8 *keys, Entity *player, Entity *bull
     }
 }
 
-void update(Entity *player, Entity *bullet, bool *bullet_active, float dt)
+void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, float dt)
 {
-    player->x += player->vx * dt;
 
+    // déplacement joueur
+    player->x += player->vx * dt;
+    
     if (player->x < 0)
         player->x = 0;
     if (player->x + player->w > SCREEN_WIDTH)
         player->x = SCREEN_WIDTH - player->w;
 
+    // déplacement munition
     if (*bullet_active)
     {
         bullet->y += bullet->vy * dt;
         if (bullet->y + bullet->h < 0)
             *bullet_active = false;
     }
+
+    // déplacement armée
+    for (int k = 0 ; k < army->longueur ; k++)
+    {
+        (army->ptr)[k].y += (army->ptr)[k].vy * dt; 
+    }
+
+    // collision 
+
 }
 
-void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, bool bullet_active)
+void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, bool bullet_active)
 {
+    // backgroud
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
+    // joueur
     SDL_Rect player_rect = {
         (int)player->x, (int)player->y,
         player->w, player->h};
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
     SDL_RenderFillRect(renderer, &player_rect);
 
+    // armée
+
+    for (int k = 0; k< army->longueur; k++){
+        Entity monster = (army->ptr)[k];
+        SDL_Rect monster_rect = {
+        (int)monster.x, (int)monster.y,
+        monster.w, monster.h};
+
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_RenderFillRect(renderer, &monster_rect);
+    }
+
+    // tir
     if (bullet_active)
     {
         SDL_Rect bullet_rect = {

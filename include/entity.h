@@ -6,6 +6,20 @@ typedef struct
     float x, y;
     float vx, vy;
     int w, h;
+    int pv;
+
 } Entity;
 
 #endif
+
+#ifndef ARMY_H
+#define ARMY_H
+
+typedef struct {
+    Entity* ptr;
+    int longueur;
+} Army;
+
+#endif
+
+

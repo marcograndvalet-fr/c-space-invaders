@@ -40,7 +40,7 @@ int main(void)
         monster.w = 40;
         monster.h = 30;
         monster.vx = 0;
-        monster.vy = 3;
+        monster.vy = 100;
         monster.pv = 1;
         (army.ptr)[k] = monster;
     } 
@@ -61,6 +61,11 @@ int main(void)
         handle_input(&running, keys, &player, &bullet, &bullet_active);
         update(&player, &bullet, &army, &bullet_active, dt);
         render(renderer, &player, &bullet, &army, bullet_active);
+        int test = endgame(&player, &army);
+        if (test != 0)
+        {
+            break;
+        }
     }
 
     cleanup(window, renderer);

@@ -82,7 +82,28 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, flo
         (army->ptr)[k].y += (army->ptr)[k].vy * dt; 
     }
 
-    // collision 
+    // collision entre munition et monstre
+    if (*bullet_active)
+    {
+        int xb = bullet->x;
+        int yb = bullet->y;
+        for (int k = 0 ; k < army->longueur ; k++)
+        {
+            int xm = (army->ptr)[k].x;
+            int ym = (army->ptr)[k].y;
+            if (xb >= xm && xb <= xm + (army->ptr)[k].w)
+            {
+                if (yb >= ym && yb <= ym + (army->ptr)[k].h)
+                {
+                    if ((army->ptr)[k].pv != 0)
+                    {
+                        (army->ptr)[k].pv -= 1;
+                    }
+                }
+
+            }
+        }
+    }
 
 }
 
@@ -102,13 +123,15 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, 
     // armée
 
     for (int k = 0; k< army->longueur; k++){
-        Entity monster = (army->ptr)[k];
-        SDL_Rect monster_rect = {
-        (int)monster.x, (int)monster.y,
-        monster.w, monster.h};
+        if ((army->ptr)[k].pv != 0) {
+            Entity monster = (army->ptr)[k];
+            SDL_Rect monster_rect = {
+            (int)monster.x, (int)monster.y,
+            monster.w, monster.h};
 
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderFillRect(renderer, &monster_rect);
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+            SDL_RenderFillRect(renderer, &monster_rect);
+        }
     }
 
     // tir
@@ -131,4 +154,30 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
     if (window)
         SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+// cette fonction renvoie 0 si il ne se passe rien 1 si victoire et 2 si défaite
+int endgame(Entity* player, Army* army)
+{
+    if (player->pv == 0)
+        {
+            return 2;
+        }
+    bool flag = true; //pour savoir s'ils sont tous morts
+    for (int k = 0; k< army->longueur ; k++)
+    {
+        if (((army->ptr)[k].y + (army->ptr)[k].h >= SCREEN_HEIGHT) && (army->ptr)[k].pv != 0)
+        {
+            return 2;
+        }
+        if ((army->ptr)[k].pv != 0)
+        {
+            flag = false;
+        }
+    }
+    if (flag)
+    {
+        return 1;
+    }
+    return 0;
 }

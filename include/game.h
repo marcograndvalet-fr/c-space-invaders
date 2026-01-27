@@ -21,5 +21,6 @@ void handle_input(bool *running, const Uint8 *keys, Entity *player, Entity *bull
 void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, float dt);
 void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, bool bullet_active);
 void cleanup(SDL_Window *window, SDL_Renderer *renderer);
+int endgame(Entity *player,Army *army);
 
 #endif

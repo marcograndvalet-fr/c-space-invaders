@@ -22,4 +22,13 @@ typedef struct {
 
 #endif
 
+#ifndef AMMO_H
+#define AMMO_H
+
+typedef struct {
+    Entity* ptr;
+    int longueur;
+} Ammo;
+#endif
+
 

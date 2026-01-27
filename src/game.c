@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include "game.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 bool init(SDL_Window **window, SDL_Renderer **renderer)
 {
@@ -57,7 +58,7 @@ void handle_input(bool *running, const Uint8 *keys, Entity *player, Entity *bull
     }
 }
 
-void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, float dt)
+void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Ammo* ammo, float dt)
 {
 
     // déplacement joueur
@@ -80,6 +81,17 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, flo
     for (int k = 0 ; k < army->longueur ; k++)
     {
         (army->ptr)[k].y += (army->ptr)[k].vy * dt; 
+    }
+
+    // déplacement munitions monstres
+    for (int k = 0 ; k < ammo->longueur ; k++)
+    {
+        Entity balle = (ammo->ptr)[k];
+        if (balle.y < SCREEN_HEIGHT) {
+            balle.y += balle.vy * dt;
+            (ammo->ptr)[k] = balle;
+        }
+        
     }
 
     // collision entre munition et monstre
@@ -107,7 +119,7 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, flo
 
 }
 
-void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, bool bullet_active)
+void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, bool bullet_active, Ammo* ammo)
 {
     // backgroud
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -134,7 +146,7 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, 
         }
     }
 
-    // tir
+    // tir du joueur
     if (bullet_active)
     {
         SDL_Rect bullet_rect = {
@@ -144,6 +156,17 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, 
         SDL_RenderFillRect(renderer, &bullet_rect);
     }
 
+    // tirs des monstres
+    for (int k = 0; k< ammo->longueur; k++){
+        Entity balle = (ammo->ptr)[k];
+        if (balle.y < SCREEN_HEIGHT) {
+            SDL_Rect balle_rect = {
+            (int)balle.x, (int)balle.y,
+            balle.w, balle.h};
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            SDL_RenderFillRect(renderer, &balle_rect);
+        }        
+    }
     SDL_RenderPresent(renderer);
 }
 
@@ -180,4 +203,30 @@ int endgame(Entity* player, Army* army)
         return 1;
     }
     return 0;
+}
+
+// générer les tirs ennemis
+void mass_shooting(Army* army, Ammo* ammo){
+    for (int k = 0; k<army->longueur ; k++)
+    {
+        if ((army->ptr)[k].pv != 0)
+        {
+            int roll = rand() % 10000;
+            if (roll<1)
+            {
+                Entity shoot = {
+                    .x = (army->ptr)[k].x + 0.5*(army->ptr)[k].w,
+                    .y = (army->ptr)[k].y + (army->ptr)[k].h,
+                    .vx = 0,
+                    .vy = 200,
+                    .h = BULLET_HEIGHT,
+                    .w = BULLET_WIDTH,
+                    .pv = 0 
+                };
+                ammo->longueur += 1;
+                ammo->ptr = realloc(ammo->ptr, (ammo->longueur) * sizeof(Entity));
+                (ammo->ptr)[ammo->longueur - 1] = shoot;
+            }
+        }
+    }
 }

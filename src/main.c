@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include "entity.h"
 #include "game.h"
 
@@ -40,13 +41,20 @@ int main(void)
         monster.w = 40;
         monster.h = 30;
         monster.vx = 0;
-        monster.vy = 100;
+        monster.vy = 10;
         monster.pv = 1;
         (army.ptr)[k] = monster;
     } 
 
     Entity bullet = {0};
     bool bullet_active = false;
+
+    // uniquement les munitions ennemies
+    Ammo ammo = {
+        .ptr = malloc(0),
+        .longueur = 0
+    };
+    
 
     while (running)
     {
@@ -59,8 +67,9 @@ int main(void)
         SDL_PumpEvents(); //récupère les inputs du clavier
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
         handle_input(&running, keys, &player, &bullet, &bullet_active);
-        update(&player, &bullet, &army, &bullet_active, dt);
-        render(renderer, &player, &bullet, &army, bullet_active);
+        update(&player, &bullet, &army, &bullet_active, &ammo, dt);
+        render(renderer, &player, &bullet, &army, bullet_active, &ammo);
+        mass_shooting(&army, &ammo);
         int test = endgame(&player, &army);
         if (test != 0)
         {
@@ -70,5 +79,6 @@ int main(void)
 
     cleanup(window, renderer);
     free(army.ptr);
+    free(ammo.ptr);
     return 0;
 }

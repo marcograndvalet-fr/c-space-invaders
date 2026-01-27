@@ -110,9 +110,30 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Amm
                     if ((army->ptr)[k].pv != 0)
                     {
                         (army->ptr)[k].pv -= 1;
+                        bullet_active = false;
                     }
                 }
 
+            }
+        }
+    }
+
+    // collision tirs ennemis et joueur 
+    for (int k = 0; k < ammo->longueur ; k++)
+    {
+        Entity balle = (ammo->ptr)[k];
+        int xb = balle.x;
+        int yb = balle.y;
+        if (xb >= player->x && xb <= player->x + PLAYER_WIDTH)
+        {
+            if (yb >= player->y && yb <= player->y + PLAYER_HEIGHT)
+            {
+                if (player->pv != 0)
+                {
+                    player->pv -= 1;
+                    balle.y = SCREEN_HEIGHT;
+                    (ammo->ptr)[k] = balle;
+                }
             }
         }
     }

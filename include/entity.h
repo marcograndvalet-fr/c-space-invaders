@@ -32,3 +32,12 @@ typedef struct {
 #endif
 
 
+#ifndef LIFE_H
+#define LIFE_H
+
+typedef struct {
+    Entity* ptr;
+    int longueur;
+} Life;
+#endif
+

@@ -2,6 +2,8 @@
 #include "game.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "entity.h"
+#include <SDL2/SDL_ttf.h>
 
 bool init(SDL_Window **window, SDL_Renderer **renderer)
 {
@@ -10,6 +12,7 @@ bool init(SDL_Window **window, SDL_Renderer **renderer)
         SDL_Log("Erreur SDL_Init: %s", SDL_GetError());
         return false;
     }
+    
 
     *window = SDL_CreateWindow("Space Invaders (SDL)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -58,7 +61,7 @@ void handle_input(bool *running, const Uint8 *keys, Entity *player, Entity *bull
     }
 }
 
-void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Ammo* ammo, float dt)
+void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Ammo* ammo, Life* life, float dt)
 {
 
     // déplacement joueur
@@ -81,6 +84,7 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Amm
     for (int k = 0 ; k < army->longueur ; k++)
     {
         (army->ptr)[k].y += (army->ptr)[k].vy * dt; 
+        (army->ptr)[k].vy = 10 + 0.1 * (army->ptr)[k].y; 
     }
 
     // déplacement munitions monstres
@@ -90,6 +94,17 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Amm
         if (balle.y < SCREEN_HEIGHT) {
             balle.y += balle.vy * dt;
             (ammo->ptr)[k] = balle;
+        }
+        
+    }
+
+    //déplacement coeurs
+    for (int k = 0 ; k < life->longueur ; k++)
+    {
+        Entity heart = (life->ptr)[k];
+        if (heart.y < SCREEN_HEIGHT) {
+            heart.y += heart.vy * dt;
+            (life->ptr)[k] = heart;
         }
         
     }
@@ -113,9 +128,30 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Amm
                         bullet_active = false;
                     }
                 }
-
             }
         }
+    }
+    // collision monstre joueur
+    for (int k = 0; k < army->longueur ; k++)
+    {
+        Entity mob = (army->ptr)[k];
+        if (mob.pv != 0){
+            int xb = mob.x;
+            int yb = mob.y;
+            if (xb >= player->x && xb <= player->x + PLAYER_WIDTH)
+            {
+                if (yb >= player->y && yb <= player->y + PLAYER_HEIGHT)
+                {
+                    if (player->pv != 0)
+                    {
+                        player->pv -= 1;
+                    }
+                    mob.pv = 0;
+                    (army->ptr)[k] = mob;
+                }
+            }
+        }
+        
     }
 
     // collision tirs ennemis et joueur 
@@ -138,9 +174,29 @@ void update(Entity *player, Entity *bullet, Army *army, bool *bullet_active, Amm
         }
     }
 
+    // collision coeur joueur
+    for (int k = 0; k < life->longueur ; k++)
+    {
+        Entity heart = (life->ptr)[k];
+        int xb = heart.x;
+        int yb = heart.y;
+        if (xb >= player->x && xb <= player->x + PLAYER_WIDTH)
+        {
+            if (yb >= player->y && yb <= player->y + PLAYER_HEIGHT)
+            {
+                if (player->pv != 0)
+                {
+                    player->pv += 1;
+                    heart.y = SCREEN_HEIGHT;
+                    (life->ptr)[k] = heart;
+                }
+            }
+        }
+    }
+
 }
 
-void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, bool bullet_active, Ammo* ammo)
+void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, bool bullet_active, Ammo* ammo, Life* life)
 {
     // backgroud
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -153,6 +209,16 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, 
     SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
     SDL_RenderFillRect(renderer, &player_rect);
 
+    // points de vie
+    for (int k =  0; k< player->pv ;k++){
+        SDL_Rect case_rect = {
+        10 + 30*k, SCREEN_HEIGHT - 30, 20, 20};
+        SDL_Surface *s = SDL_LoadBMP("image/coeur.bmp");
+        SDL_Texture *t = SDL_CreateTextureFromSurface(renderer,s);
+        SDL_FreeSurface(s);
+        SDL_RenderCopy(renderer,t,NULL,&case_rect);
+    }
+    
     // armée
 
     for (int k = 0; k< army->longueur; k++){
@@ -188,6 +254,21 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, 
             SDL_RenderFillRect(renderer, &balle_rect);
         }        
     }
+    
+
+    //coeurs
+    for (int k =0; k< life->longueur; k++){
+        Entity heart = (life->ptr)[k];
+        if (heart.y < SCREEN_HEIGHT){
+            SDL_Rect case_rect = {
+            heart.x , heart.y, heart.w, heart.h};
+            SDL_Surface *s = SDL_LoadBMP("image/coeur.bmp");
+            SDL_Texture *t = SDL_CreateTextureFromSurface(renderer,s);
+            SDL_FreeSurface(s);
+            SDL_RenderCopy(renderer,t,NULL,&case_rect);
+        }   
+    }
+    
     SDL_RenderPresent(renderer);
 }
 
@@ -232,7 +313,7 @@ void mass_shooting(Army* army, Ammo* ammo){
     {
         if ((army->ptr)[k].pv != 0)
         {
-            int roll = rand() % 10000;
+            int roll = rand() % 2000;
             if (roll<1)
             {
                 Entity shoot = {
@@ -249,5 +330,24 @@ void mass_shooting(Army* army, Ammo* ammo){
                 (ammo->ptr)[ammo->longueur - 1] = shoot;
             }
         }
+    }
+}
+
+//générer des points de vie
+void healing(Life* life){
+    int roll = rand() % 1000;
+    if (roll<1){
+        Entity heart = {
+            .x = rand() % (SCREEN_WIDTH - 20),
+            .y = rand() % (SCREEN_HEIGHT / 2),
+            .vx = 0,
+            .vy = 50,
+            .h = 20,
+            .w = 20,
+            .pv = 1
+        };
+        life->longueur += 1;
+        life->ptr = realloc(life->ptr, (life->longueur) * sizeof(Entity));
+        (life->ptr)[life->longueur - 1] = heart;
     }
 }

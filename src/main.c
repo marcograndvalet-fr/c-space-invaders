@@ -3,12 +3,13 @@
 #include <stdlib.h>
 #include "entity.h"
 #include "game.h"
+#include <SDL2/SDL_ttf.h>
 
 int main(void)
 {
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
-
+    
     if (!init(&window, &renderer))
     {
         return 1;
@@ -54,6 +55,11 @@ int main(void)
         .ptr = malloc(0),
         .longueur = 0
     };
+
+    Life life = {
+        .ptr = malloc(0),
+        .longueur = 0
+    };
     
 
     while (running)
@@ -67,18 +73,27 @@ int main(void)
         SDL_PumpEvents(); //récupère les inputs du clavier
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
         handle_input(&running, keys, &player, &bullet, &bullet_active);
-        update(&player, &bullet, &army, &bullet_active, &ammo, dt);
-        render(renderer, &player, &bullet, &army, bullet_active, &ammo);
+        update(&player, &bullet, &army, &bullet_active, &ammo, &life, dt);
+        render(renderer, &player, &bullet, &army, bullet_active, &ammo, &life);
         mass_shooting(&army, &ammo);
+        healing(&life);
         int test = endgame(&player, &army);
+        if (test == 1) {
+            printf("victoire");
+        }
+        if (test == 2) {
+            printf("défaite");
+        }
         if (test != 0)
         {
             break;
         }
+        
     }
-
+    
     cleanup(window, renderer);
     free(army.ptr);
     free(ammo.ptr);
+    free(life.ptr);
     return 0;
 }

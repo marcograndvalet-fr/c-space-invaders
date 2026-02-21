@@ -10,8 +10,17 @@ int main(void)
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
     
+    
     if (!init(&window, &renderer))
     {
+        return 1;
+    }
+
+    TTF_Font *font = TTF_OpenFont("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48);
+    if (!font)
+    {
+        SDL_Log("Erreur chargement police: %s", TTF_GetError());
+        cleanup(window, renderer);
         return 1;
     }
 
@@ -78,14 +87,10 @@ int main(void)
         mass_shooting(&army, &ammo);
         healing(&life);
         int test = endgame(&player, &army);
-        if (test == 1) {
-            printf("victoire");
-        }
-        if (test == 2) {
-            printf("défaite");
-        }
         if (test != 0)
         {
+            render_fin(renderer, font, test);
+            SDL_Delay(3000);  
             break;
         }
         
@@ -95,5 +100,6 @@ int main(void)
     free(army.ptr);
     free(ammo.ptr);
     free(life.ptr);
+    if (font){TTF_CloseFont(font);}
     return 0;
 }

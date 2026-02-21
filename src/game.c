@@ -12,6 +12,12 @@ bool init(SDL_Window **window, SDL_Renderer **renderer)
         SDL_Log("Erreur SDL_Init: %s", SDL_GetError());
         return false;
     }
+    if (TTF_Init() == -1)
+    {
+        SDL_Log("Erreur TTF_Init: %s", TTF_GetError());
+        SDL_Quit();
+        return false;
+    }
     
 
     *window = SDL_CreateWindow("Space Invaders (SDL)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -271,6 +277,34 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Army* army, 
     
     SDL_RenderPresent(renderer);
 }
+
+void render_fin(SDL_Renderer* renderer, TTF_Font* font, int statut){
+
+    //Background
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    SDL_Surface *text = NULL; 
+    if (statut == 1){
+        text = TTF_RenderUTF8_Solid(font, "Victoire", (SDL_Color) {192, 192, 192, 200});
+    }
+    else {
+        text = TTF_RenderUTF8_Solid(font, "Défaite", (SDL_Color) {192, 192, 192, 200});
+    }
+    
+    SDL_Texture *text_texture = SDL_CreateTextureFromSurface(renderer, text);
+
+    SDL_Rect text_rect = {
+        (SCREEN_WIDTH - text->w) / 2,  // x position
+        SCREEN_HEIGHT / 6,  // y position
+        text->w,  // width
+        text->h   // height
+    };
+    SDL_RenderCopy(renderer, text_texture, NULL, &text_rect);
+    SDL_RenderPresent(renderer);
+    SDL_FreeSurface(text);
+}
+
 
 void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 {

@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include "entity.h"
+#include <SDL2/SDL_ttf.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -24,5 +25,6 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer);
 int endgame(Entity *player,Army *army);
 void mass_shooting(Army* army, Ammo* ammo);
 void healing(Life* life);
+void render_fin(SDL_Renderer* renderer, TTF_Font* font, int statut);
 
 #endif

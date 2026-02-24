@@ -101,5 +101,6 @@ int main(void)
     free(ammo.ptr);
     free(life.ptr);
     if (font){TTF_CloseFont(font);}
+    TTF_Quit();
     return 0;
 }
